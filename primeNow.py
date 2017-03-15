@@ -8,7 +8,7 @@ with requests.session() as c:
    
     emailAddress = ""
     password = ""
-    sendTo = ""
+    sendTo = "@vtext.com"
     sleeppart = True
     zippart = True
 
@@ -36,6 +36,7 @@ with requests.session() as c:
         soup = bs4.BeautifulSoup(page.text, "html5lib")
         filtered = soup.findAll("p", {"class": "asin__details__title"})
         for item in filtered:
+            print(item.text.strip())
             if(item.text.strip() == "Nintendo Switch with Neon Blue and Neon Red Joy-Con"):
                 neon = "Neon - IN STOCK!"
                 break
@@ -49,15 +50,16 @@ with requests.session() as c:
         if (neon == "Neon - IN STOCK!" or gray == "Gray - IN STOCK!"):
             #logic for stuff
             print("THERE IS ONE ")
-
+            server = smtplib.SMTP("smtp.gmail.com", 587)
+            server.starttls()
+            server.login(emailAddress, password)
+            msg = "THERE IS ONE go to \nhttps://primenow.amazon.com/search?k=nintendo+switch&p_95=&merchantId=&ref_=pn_gw_nav_ALL/"
+            server.sendmail(emailAddress, sendTo, msg)
+            server.quit()
+            
+        
         ts = time.time()
         st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        server = smtplib.SMTP("smtp.gmail.com", 587)
         
-        server.starttls()
-        server.login(emailAddress, password)
-        msg = "THERE IS ONE GO TO https://primenow.amazon.com/search?k=nintendo+switch&p_95=&merchantId=&ref_=pn_gw_nav_ALL"
-        server.sendmail(emailAddress, sendTo, msg)
-        server.quit()
         print(st + "\n" + neon + "\n" + gray + "\n")
         time.sleep(int(sleeptime))
