@@ -34,12 +34,12 @@ with requests.session() as c:
     login_data = dict(newPostalCode = zip);
     c.post(url, data=login_data, headers = {'User-agent': 'Mozilla/5.0'})
     
-#    server = smtplib.SMTP("smtp.gmail.com", 587)
-#    server.starttls()
-#    server.login(emailAddress, password)
-#    msg = "Battle Star ONLINE"
-#    server.sendmail(emailAddress, sendTo, msg)
-#    server.quit()
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login(emailAddress, password)
+    msg = "Battle Star ONLINE"
+    server.sendmail(emailAddress, sendTo, msg)
+    server.quit()
     
     counter = 0
     
