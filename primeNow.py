@@ -3,27 +3,29 @@ import time
 import bs4
 import requests
 import smtplib
+import sqlite3
 with requests.session() as c:
 
    
     emailAddress = ""
     password = ""
     sendTo = "@vtext.com"
-    sleeppart = True
-    zippart = True
-
-    while(sleeppart):
-        sleeptime = input("Enter the sleep time after every search in seconds: ")
-        if (sleeptime < 20):
-            print("The minimum sleep time is 20 seconds.")
-        else: sleeppart = False
-
-    while(zippart):
-        zip = input("Enter the zipcode of your choice: ")
-        if (len(str(zip)) != 5):
-            print("The zip code has to be at least 5 digits.")
-        else: zippart = False
-
+    sleeptime = 20
+    zip = 85295
+    
+    sqliteFile = 'SwitchData.sqlite'
+    
+    conn = sqlite3.connect(sqliteFile)
+    conn.execute('''
+	CREATE TABLE IF NOT EXISTS switchStock(
+		Grey TEXT,
+		Neon TEXT,
+		Timestamp TEXT
+    	);
+    ''')
+    
+    conn.close()
+	
     print("Searching in zip code: "+ str(zip) + '\n')
     neon = "Neon - No Stock"
     gray = "Gray - No Stock"
@@ -31,7 +33,30 @@ with requests.session() as c:
     c.get(url)
     login_data = dict(newPostalCode = zip);
     c.post(url, data=login_data, headers = {'User-agent': 'Mozilla/5.0'})
+    
+#    server = smtplib.SMTP("smtp.gmail.com", 587)
+#    server.starttls()
+#    server.login(emailAddress, password)
+#    msg = "Battle Star ONLINE"
+#    server.sendmail(emailAddress, sendTo, msg)
+#    server.quit()
+    
+    counter = 0
+    
     while(True):
+        
+        if counter == 180:
+            server = smtplib.SMTP("smtp.gmail.com", 587)
+            server.starttls()
+            server.login(emailAddress, password)
+            msg = "Health Check- System Online"
+            server.sendmail(emailAddress, sendTo, msg)
+            server.quit()
+            counter = 0
+        else:
+            counter = counter + 1
+            
+            
         page = c.get("https://primenow.amazon.com/search?k=nintendo+switch&p_95=&merchantId=&ref_=pn_gw_nav_ALL", headers = {'User-agent': 'Mozilla/5.0'})
         soup = bs4.BeautifulSoup(page.text, "html5lib")
         filtered = soup.findAll("p", {"class": "asin__details__title"})
@@ -62,4 +87,12 @@ with requests.session() as c:
         st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
         
         print(st + "\n" + neon + "\n" + gray + "\n")
+        
+        conn = sqlite3.connect(sqliteFile)
+        data = [(gray, neon, st)]
+        conn.executemany("INSERT INTO switchStock VALUES(?,?, ?)", data)
+        conn.commit()
+        conn.close()
+        
         time.sleep(int(sleeptime))
+        
